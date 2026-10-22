@@ -673,91 +673,41 @@ static int acer_wmi_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
 
 }
 
+static int acer_wmi_hwmon_write(struct device *dev, enum hwmon_sensor_types type,
+				u32 attr, int channel, long val)
+{
 
+}
 
+static const struct hwmon_channel_info *const acer_wmi_hwmon_info[] = {
 
+};
 
+static const struct hwmon_ops acer_wmi_hwmon_ops = {
 
+};
 
+static const struct hwmon_chip_info acer_wmi_hwmon_chip_info = {
 
+};
 
+static int acer_wmi_hwmon_init(void)
+{
 
+}
 
+static int __init acer_wmi_init(void)
+{
 
+}
 
+static void __exit acer_wmi_exit(void)
+{
 
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+module_init(acer_wmi_init);
+module_exit(acer_wmi_exit);
 
 MODULE_AUTHOR("Qapky");
 MODULE_DESCRIPTION("Acer Nitro V16 Family WMI Extras Driver");
