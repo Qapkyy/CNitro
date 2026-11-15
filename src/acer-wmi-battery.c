@@ -337,7 +337,7 @@ static void __exit acer_wmi_battery_module_exit(void)
 module_init(acer_wmi_battery_module_init);
 module_exit(acer_wmi_battery_module_exit);
 
-MODULE_AUTHOR("Mulky Fauzan <qapkyy3@gmail.com>")
+MODULE_AUTHOR("Mulky Fauzan <qapkyy3@gmail.com>");
 MODULE_AUTHOR("Frederik Harwath <frederik@harwath.name>");
 MODULE_AUTHOR("Jelle van der Waa <jelle@vdwaa.nl>");
 MODULE_DESCRIPTION("Acer battery health control WMI driver");
