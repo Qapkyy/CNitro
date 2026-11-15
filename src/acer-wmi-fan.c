@@ -176,7 +176,8 @@ static int build_steps(int cpu, int gpu, struct fan_step steps[3])
         int n = 0;
 
         if (!cpu && !gpu) {
-                steps[n++] = (struct fan_step){METHOD_FAN_BEHAVIOR,
+                steps[n++] = (struct fan_step){
+			METHOD_FAN_BEHAVIOR,
 			BEHAVIOR_CMD(SEL_CPU | SEL_GPU, MODE_AUTO, MODE_AUTO)
 		};
         } else if (cpu == PCT_MAX && gpu == PCT_MAX) {
