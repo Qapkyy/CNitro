@@ -486,6 +486,4 @@ static void __exit acer_fan_exit(void)
 module_init(acer_fan_init);
 module_exit(acer_fan_exit);
 
-MODULE_AUTHOR("Mulky Fauzan <qapkyy3@gmail.com>");
-MODULE_DESCRIPTION("Acer fan control WMI driver");
-MODULE_LICENSE("GPL");
+
