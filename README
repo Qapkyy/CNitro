@@ -75,8 +75,8 @@ root-owned build files behind.
 
 Load the modules:
 
-    sudo insmod acer-wmi-battery.ko
-    sudo insmod acer-wmi-fan.ko
+    sudo insmod src/acer-wmi-battery.ko
+    sudo insmod src/acer-wmi-fan.ko
 
 Unload the modules:
 
