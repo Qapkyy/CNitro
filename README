@@ -1,106 +1,181 @@
-Acer Nitro V16 Advanced Control Driver (qapkyy_qy)
-===================================================
+Acer Nitro V16 WMI Drivers (nitro-wmi)
+======================================
 
-The qapkyy_qy kernel driver module provides an advanced hardware control
-interface explicitly tailored for the Acer Nitro V16 (ANV16-71) laptop platform
-on Linux architectures. This implementation functions as an isolated kernel module to
-completely decouple control mechanics from the native upstream acer-wmi
-subsystem, removing resource execution conflicts.
+This repository contains out-of-tree Linux kernel modules for the
+Acer Nitro:
 
-This driver introduces programmatic controls directly missing under native
-Linux platform frameworks, including physical firmware-bound thermal profiles,
-direct fan hardware monitoring/speed automation, and non-volatile battery
-charging health limits.
+    acer-wmi-battery    Battery health mode (the charge limiter) and
+                        battery temperature.
+    acer-wmi-fan        CPU and GPU fan speed control and fan RPM
+                        monitoring.
+
+Both modules are built and loaded separately, and neither depends on the
+in-tree acer-wmi driver.
+
+
+Special Thanks
+--------------
+
+A very big thank you to Frederik Harwath (frederik-h).
+
+acer-wmi-battery in this repository is built directly on his original
+acer-wmi-battery driver:
+
+    https://github.com/frederik-h/acer-wmi-battery/
+
+This project would not have a battery module without his work. His code
+and its clean structure made it possible to adapt the driver to the Nitro
+V16, and everything that works in the battery module stands on the
+foundation he built. Thank you, Frederik!
+
+Thanks also to Jelle van der Waa, co-author of the original driver.
+
+The changes made here are small: a DMI entry for the Acer Nitro ANV16-71,
+and devm_kzalloc() instead of devm_kzalloc_obj() so the module builds
+against kernel headers that do not provide the newer helper. The original
+copyright and license are kept.
+
+
+Supported Hardware
+------------------
+
+    Acer Nitro V16, DMI product name "Nitro ANV16-71"
+
+Tested on Fedora with kernel 7.3.3.
+
+    * acer-wmi-fan only loads on the supported model unless the force
+      parameter is used (see "Module Parameters").
+    * acer-wmi-battery exposes the charge limiter on the supported model
+      only. Other systems get battery temperature reporting only, unless
+      the force parameter is used.
+
+acer-wmi-battery uses the newer WMI buffer API of the kernel
+(struct wmi_buffer and wmidev_invoke_method()), so older kernels may not
+be able to build it.
+
 
 System Prerequisites
------------------------
+--------------------
 
-    Before executing the compiled automated structures, verify that your
-    target Linux operating system environment includes the mandatory platform
-    build headers:
+    * Kernel headers that match the running kernel
+      (kernel-devel on Fedora, linux-headers on Debian and Ubuntu).
+    * gcc and make.
 
-    * Linux Kernel Version: 6.x or newer recommended.
-    * Base System Packages: linux-headers (or linux-devel depending on
-      distribution) and standard build essentials (gcc, make, openssl).
-Installation (assume secure boot active.)
---------------------------------------------
+Check that the running kernel and the installed headers are the same
+version: "uname -r" must match the version of the headers.
 
-    chmod +x setup.sh
-    bash setup.sh
 
-    * To examine target unit execution tracking logs:
-      sudo systemctl status qapkyy_qy.service
+Building and Loading
+--------------------
 
-How to usage?
---------------------------------------------
+Build as a normal user. Do not use sudo for make, because that leaves
+root-owned build files behind.
 
-1. Battery Calibration
-This function calibrates your battery to provide a more accurate percentage reading. It involves charging the battery to 100%, draining it to 0%, and recharging it back to 100%. Do not unplug the laptop from AC power during calibration.
+    make
 
-    1 – Start calibration
-    0 – Stop calibration
+Load the modules:
 
-To check the current status:
+    sudo insmod acer-wmi-battery.ko
+    sudo insmod acer-wmi-fan.ko
 
-cat /sys/module/qapkyy_qy/drivers/platform:acer-wmi/acer-wmi/nitro_sense/battery_calibration
+Unload the modules:
 
-To change the state:
+    sudo rmmod acer_wmi_fan
+    sudo rmmod acer_wmi_battery
 
-echo 1 | sudo tee /sys/module/qapkyy_qy/drivers/platform:acer-wmi/acer-wmi/nitro_sense/battery_calibration
+Unloading acer-wmi-fan returns the fans to automatic mode.
 
-2. Battery Limiter
-Limits battery charging to 80%, preserving battery health for laptops primarily used while plugged into AC power.
+Secure Boot: unsigned modules are rejected while Secure Boot is enabled
+("Key was rejected by service"). Disable Secure Boot or sign the modules
+with your own key.
 
-    1 – Enabled
-    0 – Disabled
+Modules loaded with insmod are gone after a reboot. To keep them, install
+them for the running kernel and load them at boot:
 
-To check the current status:
+    sudo mkdir -p /lib/modules/$(uname -r)/extra
+    sudo cp src/*.ko /lib/modules/$(uname -r)/extra/
+    sudo depmod -a
+    printf 'acer_wmi_battery\nacer_wmi_fan\n' | sudo tee /etc/modules-load.d/nitro-wmi.conf
 
-cat /sys/module/qapkyy_qy/drivers/platform:acer-wmi/acer-wmi/nitro_sense/battery_limiter
+This must be repeated after every kernel update, because a module is tied
+to the kernel version it was built for.
 
-To change the state:
 
-echo 1 | sudo tee /sys/module/qapkyy_qy/drivers/platform:acer-wmi/acer-wmi/nitro_sense/battery_limiter
+How to use?
+-----------
 
-3. Fan Speed
-Controls the CPU and GPU fan speeds.
+1. Battery Health (acer-wmi-battery)
 
-    0 – Auto
-    1 – Minimum fan speed (recommended if you stupid)
-    100 – Maximum fan speed
-    Other values like 50, 55, 70 can be set according to your preference.
+Acer's battery health mode keeps the battery from charging to full, which
+preserves battery health on laptops that are mostly used plugged into AC
+power. The limit itself is decided by the firmware and cannot be set to
+a custom value with this driver.
+
+The mode is exposed as the charge type of the battery:
+
+    Standard    Normal charging.
+    Long_Life   Battery health mode enabled.
+
+To check the current charge type:
+
+    cat /sys/class/power_supply/BAT*/charge_types
+
+To enable battery health mode:
+
+    echo Long_Life | sudo tee /sys/class/power_supply/BAT*/charge_types
+
+To disable it again:
+
+    echo Standard | sudo tee /sys/class/power_supply/BAT*/charge_types
+
+The battery is BAT1 on the tested machine. The battery temperature is also
+reported by the module:
+
+    cat /sys/class/power_supply/BAT*/temp
+    sensors
+
+Whether the setting is kept by the firmware after a reboot or a shutdown
+depends on the laptop. Check "charge_types" after a reboot. Set Standard
+before removing the module, because the firmware may keep the state while
+the driver is not loaded to change it.
+
+2. Fan Speed (acer-wmi-fan)
+
+Controls the CPU and GPU fan speeds as "cpu,gpu" percentages:
+
+    0       Auto (the firmware fan curve).
+    20-99   Fixed speed.
+    100     Maximum speed. If both fans are set to 100, the firmware
+            maximum mode is used.
+
+Speeds of 1-19 are refused unless the module was loaded with
+unsafe_low_duty=1.
 
 Example (set CPU to 50 and GPU to 70):
 
-echo 50,70 | sudo tee /sys/module/qapkyy_qy/drivers/platform:acer-wmi/acer-wmi/nitro_sense/fan_speed
+    echo 50,70 | sudo tee /sys/module/acer_wmi_fan/parameters/fan_speed
 
-4. USB Charging
-Allows the USB charging port to provide power even when the laptop is off.
+Set CPU to automatic and GPU to a fixed 60:
 
-    0 – Disabled
-    10 – Provides power until battery reaches 10%
-    20 – Provides power until battery reaches 20%
-    30 – Provides power until battery reaches 30%
+    echo 0,60 | sudo tee /sys/module/acer_wmi_fan/parameters/fan_speed
 
-To check the current status:
+Return both fans to automatic:
 
-cat /sys/module/qapkyy_qy/drivers/platform:acer-wmi/acer-wmi/nitro_sense/usb_charging
+    echo 0,0 | sudo tee /sys/module/acer_wmi_fan/parameters/fan_speed
 
-To change the state:
+To check the requested speeds (these are the values the driver last
+applied, not a measurement):
 
-echo 20 | sudo tee /sys/module/qapkyy_qy/drivers/platform:acer-wmi/acer-wmi/nitro_sense/usb_charging
+    sudo cat /sys/module/acer_wmi_fan/parameters/fan_speed
 
-5. Thermal Profiles
-To probe the current thermal profile:
+To read the real fan speed in RPM, printed as "cpu,gpu":
 
-cat /sys/firmware/acpi/platform_profile
+    sudo cat /sys/module/acer_wmi_fan/parameters/fan_rpm
 
-To check the supported thermal profile:
+License
+-------
 
-cat /sys/firmware/acpi/platform_profile_choices
-
-To switch the platform profile:
-
-echo balanced | sudo tee /sys/firmware/acpi/platform_profile
-
-Replace the balanced with the supported profile you have.
+    acer-wmi-battery    GPL-2.0-or-later
+                        Copyright (C) 2022-2025 Frederik Harwath
+    acer-wmi-fan        GPL-2.0
+                        Copyright (C) Mulky Fauzan
