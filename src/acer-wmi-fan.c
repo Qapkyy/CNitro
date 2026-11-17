@@ -176,62 +176,62 @@ static int build_steps(int cpu, int gpu, struct fan_step steps[3])
         int n = 0;
 
         if (!cpu && !gpu) {
-                steps[n++] = (struct fan_step){ 
+                steps[n++] = (struct fan_step){
 			METHOD_FAN_BEHAVIOR,
-                        BEHAVIOR_CMD(SEL_CPU | SEL_GPU, MODE_AUTO, MODE_AUTO) 
+			BEHAVIOR_CMD(SEL_CPU | SEL_GPU, MODE_AUTO, MODE_AUTO)
 		};
         } else if (cpu == PCT_MAX && gpu == PCT_MAX) {
-                steps[n++] = (struct fan_step){ 
+                steps[n++] = (struct fan_step){
 			METHOD_FAN_BEHAVIOR,
-                        BEHAVIOR_CMD(SEL_CPU | SEL_GPU, MODE_MAX, MODE_MAX) 
+			BEHAVIOR_CMD(SEL_CPU | SEL_GPU, MODE_MAX, MODE_MAX)
 		};
         } else if (!cpu) {
                 /* CPU automatic, GPU fixed */
-                steps[n++] = (struct fan_step){ 
+                steps[n++] = (struct fan_step){
 			METHOD_FAN_BEHAVIOR,
-                        BEHAVIOR_CMD(SEL_CPU, MODE_AUTO, 0) 
+			BEHAVIOR_CMD(SEL_CPU, MODE_AUTO, 0)
 		};
                 
-		steps[n++] = (struct fan_step){ 
+		steps[n++] = (struct fan_step){
 			METHOD_FAN_BEHAVIOR,
-                        BEHAVIOR_CMD(SEL_GPU, 0, MODE_CUSTOM) 
+			BEHAVIOR_CMD(SEL_GPU, 0, MODE_CUSTOM)
 		};
                 
-		steps[n++] = (struct fan_step){ 
+		steps[n++] = (struct fan_step){
 			METHOD_FAN_SPEED,
-                        SPEED_CMD(gpu, FAN_IDX_GPU) 
+			SPEED_CMD(gpu, FAN_IDX_GPU)
 		};
         } else if (!gpu) {
                 /* GPU automatic, CPU fixed */
-                steps[n++] = (struct fan_step){ 
+                steps[n++] = (struct fan_step){
 			METHOD_FAN_BEHAVIOR,
-                        BEHAVIOR_CMD(SEL_GPU, 0, MODE_AUTO) 
+			BEHAVIOR_CMD(SEL_GPU, 0, MODE_AUTO)
 		};
 
-                steps[n++] = (struct fan_step){ 
+                steps[n++] = (struct fan_step){
 			METHOD_FAN_BEHAVIOR,
-                        BEHAVIOR_CMD(SEL_CPU, MODE_CUSTOM, 0) 
+			BEHAVIOR_CMD(SEL_CPU, MODE_CUSTOM, 0)
 		};
 
-                steps[n++] = (struct fan_step){ 
-			METHOD_FAN_SPEED,
-                        SPEED_CMD(cpu, FAN_IDX_CPU) 
+                steps[n++] = (struct fan_step){
+			METHOD_FAN_SPEED, 
+			SPEED_CMD(cpu, FAN_IDX_CPU)
 		};
         } else {
                 /* Both fixed */
-                steps[n++] = (struct fan_step){ 
-			METHOD_FAN_BEHAVIOR,
-                        BEHAVIOR_CMD(SEL_CPU | SEL_GPU, MODE_CUSTOM, MODE_CUSTOM) 
+                steps[n++] = (struct fan_step){
+			METHOD_FAN_BEHAVIOR, 
+			BEHAVIOR_CMD(SEL_CPU | SEL_GPU, MODE_CUSTOM, MODE_CUSTOM)
 		};
 
-                steps[n++] = (struct fan_step){ 
-			METHOD_FAN_SPEED,
-                        SPEED_CMD(cpu, FAN_IDX_CPU) 
+                steps[n++] = (struct fan_step){
+			METHOD_FAN_SPEED, 
+			SPEED_CMD(cpu, FAN_IDX_CPU)
 		};
 
-                steps[n++] = (struct fan_step){ 
-			METHOD_FAN_SPEED,
-                        SPEED_CMD(gpu, FAN_IDX_GPU) 
+                steps[n++] = (struct fan_step){
+			METHOD_FAN_SPEED, 
+			SPEED_CMD(gpu, FAN_IDX_GPU)
 		};
         }
 
